@@ -2,7 +2,7 @@
  * @Author: giaruei
  * @Date: 2024-11-16 15:00:34
  * @LastEditors: giaruei caigiaruei@gmail.com
- * @LastEditTime: 2024-11-16 15:47:17
+ * @LastEditTime: 2024-11-16 16:05:00
  * @FilePath: /Front-try/promise.js
  * @Description: 手写 promise 和她的方法
  */
@@ -132,3 +132,60 @@ new Promisee((res, rej) => {
       console.log("fail", err);
     }
   );
+
+function promiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    let result = [];
+    let resultCount = 0;
+    if (!Array.isArray(promises)) {
+      return reject(new TypeError("Promises must be an array"));
+    }
+    if (promises.length === 0) resolve([]);
+    promises.forEach((promise, index) => {
+      Promise.resolve(promise)
+        .then((value) => {
+          result[index] = value;
+          resultCount++;
+          if (resultCount === promises.length) {
+            resolve(result);
+          }
+        })
+        .catch((e) => reject(e));
+    });
+  });
+}
+
+function promiseRace(promises) {
+  return new Promise((resolve, reject) => {
+    if (!Array.isArray(promises)) {
+      return reject(new TypeError("Promises must be an array"));
+    }
+    if (promises.length === 0) {
+      return resolve(undefined);
+    }
+    promises.forEach((promise) => {
+      Promise.resolve(promise)
+        .then((value) => resolve(value))
+        .catch((e) => reject(e));
+    });
+  });
+}
+
+const p1 = Promise.resolve(1);
+const p2 = Promise.resolve(2);
+const p3 = Promise.resolve(3);
+
+Promise.all([p1, p2, p3])
+  .then((res) => console.log(res)) // [1, 2, 3]
+  .catch((e) => console.log(e));
+
+const p4 = new Promise((resolve) => setTimeout(resolve, 1000, "p4"));
+const p5 = new Promise((resolve) => setTimeout(resolve, 500, "p5"));
+
+promiseRace([p4, p5])
+  .then((value) => {
+    console.log(value); // 输出: 'p5'，因为 p5 是第一个解决的promise
+  })
+  .catch((error) => {
+    console.error(error);
+  });
