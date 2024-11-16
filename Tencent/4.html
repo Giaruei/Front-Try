@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+
+	<body>
+		<script>
+			function create(transformers) {
+				return function (template, ...args) {
+					let idx = 0;
+					let state = "UNDEFINED";
+
+					return template.replace(
+						/([{}])\1|[{](.*?)(?:!(.+?))?[}]/g,
+						function (match, literal, key, xf) {
+							if (literal != null) {
+								return literal;
+							}
+							if (key.length > 0) {
+								if (state === "IMPLICIT") {
+									throw ValueError(
+										"cannot switch from implicit to explicit numbering"
+									);
+								}
+								state = "EXPLICIT";
+							} else {
+								if (state === "EXPLICIT") {
+									throw ValueError(
+										"cannot switch from explicit to implicit numbering"
+									);
+								}
+								state = "IMPLICIT";
+								key = String(idx);
+								idx += 1;
+							}
+
+							// 补全代码: 根据占位符的 key 和 args 数组中的值，获取相应的 value
+							// 提示：使用 key 和 args 数组来获取正确的 value
+
+              const value = getVal(args, key)
+							if (xf == null) {
+								// 补全代码: 如果没有转换器 xf，返回获取到的 value
+								return value;
+							} else if (transformers.hasOwnProperty(xf)) {
+								// 补全代码: 如果存在名为 xf 的转换器，将其应用于 value，并返回转换后的结果
+								// 提示：使用 transformers 对象来查找和应用转换器
+								// const value = args[key];
+								const transformer = transformers[xf];
+								return transformer(value);
+							} else {
+								throw ValueError(`no transformer named "${xf}"`);
+							}
+						}
+					);
+				};
+			}
+
+			function getVal(obj, path) {
+				const keys = path.split(".");
+				let val = obj;
+				for (let key of keys) {
+					val = val[key];
+					if (val === undefined) {
+						break;
+					}
+				}
+				return val;
+			}
+
+			function ValueError(message) {
+				var err = new Error(message);
+				err.name = "ValueError";
+				return err;
+			}
+
+			// 使用转换器
+			const transformers = {
+				uppercase: function (value) {
+					return value.toUpperCase();
+				},
+				lowercase: function (value) {
+					return value.toLowerCase();
+				},
+			};
+			const format = create({});
+			const res1 = format("Hello, {0}!", "John"); // Hello, John!
+
+			// 隐式编号的占位符
+			const res2 = format("Hello, {}!", "John"); // Hello, John!
+
+			// 显式编号的占位符
+			const res3 = format("Hello, {1}! My name is {0}.", "Alice", "Bob"); // Hello, Bob! My name is Alice.
+
+      // const format = create(transformers);
+			const res4 = format("Hello, {0!uppercase}!", "John"); // Hello, JOHN!
+
+			// 嵌套对象的访问
+			const user = {
+				name: "John",
+				age: 30,
+				address: {
+					city: "New York",
+					country: "USA",
+				},
+			};
+			const res5 = format(
+				"Name: {0.name}, Age: {0.age}, City: {0.address.city}",
+				user
+			); // Name: John, Age: 30, City: New York
+
+			console.log(res1, res2, res3, res4, res5);
+
+		</script>
+	</body>
+</html>
