@@ -2,7 +2,7 @@
  * @Author: giaruei
  * @Date: 2024-11-17 14:12:12
  * @LastEditors: giaruei caigiaruei@gmail.com
- * @LastEditTime: 2024-11-17 18:46:04
+ * @LastEditTime: 2024-11-17 19:02:22
  * @FilePath: /Front-try/Interview/repeat.js
  * @Description: 手写一个每 x 秒执行一次函数，一共执行 y 次的函数
  */
@@ -15,16 +15,17 @@
  * @return {*}
  */
 function repeat(fn, count, delay) {
-  let flag = 0;
-  let timer = null;
   return function (...args) {
-    if (flag < count) {
+    // 两个变量要放在内部函数中
+    let flag = 0;
+    let timer = null;
+    if (flag < count && !timer) {
       timer = setInterval(() => {
         fn.apply(this, args);
         flag++;
         if (flag === count) {
           clearInterval(timer);
-          isRunning = false;
+          flag = 0;
         }
       }, delay);
     } else if (flag >= count) {
@@ -32,9 +33,9 @@ function repeat(fn, count, delay) {
     }
   };
 }
-const repeatFn = repeat(console.log, 4, 1000);
+const repeatFn = repeat(console.log, 2, 1000);
 repeatFn("Hello World");
-repeatFn("Hello World"); // bug: 再次调用不会打印
+repeatFn("Hello World1");
 
-const repeatFn1 = repeat(console.log, 2, 500);
-repeatFn1('Hello World1')
+const repeatFn1 = repeat(console.log, 3, 500);
+repeatFn1("Hello World2"); 
