@@ -2,7 +2,7 @@
  * @Author: giaruei
  * @Date: 2025-01-17 11:44:00
  * @LastEditors: giaruei caigiaruei@gmail.com
- * @LastEditTime: 2025-01-19 15:47:02
+ * @LastEditTime: 2025-02-23 21:04:46
  * @FilePath: /Front-Try/EventEmitter.js
  * @Description: 手写发布订阅模式
  */
@@ -76,6 +76,89 @@ let HunterUnion = {
     }
   },
 };
+
+class _EventEmitter {
+  constructor() {
+    this.events = {}; // 存储事件及其订阅者的映射
+  }
+
+  // 订阅事件
+  on(eventName, callback) {
+    if (typeof callback !== "function") {
+      throw new Error("Callback must be a function");
+    }
+
+    if (!this.events[eventName]) {
+      this.events[eventName] = [];
+    }
+    this.events[eventName].push(callback);
+    return this; // 支持链式调用
+  }
+
+  // 发布事件
+  emit(eventName, ...args) {
+    const callbacks = this.events[eventName];
+    if (callbacks) {
+      callbacks.forEach((callback) => {
+        try {
+          callback.apply(this, args);
+        } catch (error) {
+          console.error(`Error executing ${eventName} callback:`, error);
+        }
+      });
+    }
+    return this;
+  }
+
+  // 取消订阅
+  off(eventName, callback) {
+    const callbacks = this.events[eventName];
+    if (callbacks) {
+      if (callback) {
+        // 移除特定回调
+        this.events[eventName] = callbacks.filter((cb) => cb !== callback);
+      } else {
+        // 移除所有回调
+        delete this.events[eventName];
+      }
+    }
+    return this;
+  }
+
+  // 一次性订阅
+  once(eventName, callback) {
+    const wrapper = (...args) => {
+      callback.apply(this, args);
+      this.off(eventName, wrapper);
+    };
+    return this.on(eventName, wrapper);
+  }
+}
+
+// 使用示例
+const _emitter = new _EventEmitter();
+
+// 订阅常规事件
+_emitter.on("data", (data) => {
+  console.log("Received data:", data);
+});
+
+// 订阅一次性事件
+_emitter.once("connect", () => {
+  console.log("Connected!");
+});
+
+// 发布事件
+_emitter.emit("data", { message: "Hello World" });
+// 输出: Received data: { message: 'Hello World' }
+
+_emitter.emit("connect"); // 输出: Connected!
+_emitter.emit("connect"); // 无输出（已自动取消订阅）
+
+// 取消订阅
+const handleClick = () => console.log("Clicked");
+_emitter.on("click", handleClick);
+_emitter.off("click", handleClick);
 
 //定义一个猎人类
 //包括姓名，级别
